@@ -10,10 +10,11 @@ def analyze_casualties_cause_view():
     # 对违法行为进行分布统计，忽略NaN值
     violations = minor_injuries['违法行为'].value_counts()
     total_count = violations.sum()
-    
+    print(f"\n轻伤事故违法行为总数：{total_count}次\n")
+
     # 计算占比
     percentages = (violations / total_count * 100).round(1)
-    
+
     # 输出所有分布和占比
     print("\n所有轻伤事故的违法行为分布统计：")
     for violation, count in violations.items():

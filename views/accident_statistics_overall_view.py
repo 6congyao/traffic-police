@@ -38,6 +38,7 @@ def get_accidents_overall_view(df):
         accident_stats = df.groupby('来源')['事故编号'].nunique()
         print("\n各来源下不同事故编号的数量统计：")
         print(str(accident_stats))
+        return accident_stats.to_dict()
 
     except Exception as e:
         print(f"处理数据时发生错误: {str(e)}", flush=True)
@@ -55,6 +56,7 @@ def get_accidents_casualties_overall_view(df):
         id_stats = df.groupby(['来源', '伤害程度'])['身份证明号码'].nunique()
         print("\n各来源和伤害程度下不同身份证明号码的数量统计：")
         print(str(id_stats))
+        return id_stats.to_dict()
 
     except Exception as e:
         print(f"处理数据时发生错误: {str(e)}", flush=True)
