@@ -1,6 +1,8 @@
 import pandas as pd
 from views import accident_statistics_overall_view as overall_view
 from views import accident_statistics_decedents_base_view as dec_base_view
+from views import accident_statistics_decedents_team_view as dec_team_view
+from views import accident_statistics_decedents_age_cause_view as dec_age_view
 from utils import word_template as wt
 from dateutil import parser
 
@@ -39,6 +41,9 @@ if __name__ == '__main__':
     dec_base_res, dec_acc_count = dec_base_view.get_accidents_decedents_base_view(dataframe)
 
     dec_base_details = ""
+    dec_time_details = ""
+    dec_age_details = ""
+    dec_cause_details = ""
     if dec_acc_count > 0:
         # 亡人事故基本情况
         for accident_id, cases in dec_base_res.items():
@@ -47,16 +52,47 @@ if __name__ == '__main__':
                 for idx, row in dset.iterrows():
                     time_obj = parser.parse(str(row['事故发生时间']))
                     dec_base_details += f"{time_obj.strftime('%m月%d日%H时%M分')}, 在{row['事故地点']}，因{row['违法行为']}违法行为，造成1人死亡。"
+                    dec_time_details += f"{time_obj.strftime('%H时%M分')}、"
             else:
                 behaviors = ""
                 for idx, row in dset.iterrows():
                     behaviors += f"{row['违法行为']}、"
                 time_obj = parser.parse(str(row['事故发生时间']))
                 dec_base_details += f"{time_obj.strftime('%m月%d日%H时%M分')}, 在{row['事故地点']}，因{behaviors[:-1]}违法行为，造成{len(dset)}人死亡。"
-            
-            print(f"\n事故编号: {accident_id} (涉及 {len(cases)} 人)")
-            print("-" * 100)
+                dec_time_details += f"{time_obj.strftime('%H时%M分')}、"
     
+        dec_time_details = dec_time_details[:-1]
+        dec_team_df = dec_team_view.get_accidents_decedents_team_view(dataframe)
+
+        dec_age_dict, _= dec_age_view.get_decedents_age_cause_view(dataframe)
+        if dec_acc_count == 1:
+            for accident_id, cases in dec_age_dict.items():
+                dec_age_details = f"事故双方为"
+                dec_cause_details = f"事故原因为"
+                prename = ""
+                for idx, row in cases.iterrows():
+                    if row['伤害程度'] == '死亡':
+                        prename = f"死者"
+                    else:
+                        prename = f"当事人"   
+                    dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
+                    dec_cause_details += f"{row['违法行为'][:-1]},"
+        else:
+            count = 1
+            for accident_id, cases in dec_age_dict.items():
+                dec_age_details += f"事故{count}双方为"
+                dec_cause_details += f"事故{count}原因为"
+                prename = ""
+                for idx, row in cases.iterrows():
+                    if row['伤害程度'] == '死亡':
+                        prename = f"死者"
+                    else:
+                        prename = f"当事人"
+                    dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
+                    dec_cause_details += f"{row['违法行为'][:-1]},"
+                count += 1
+        
+
     replacements = {
         '{$total_a}': acc_res['一般事故'] + acc_res['简易事故'],
         '{$total_c}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
@@ -67,10 +103,16 @@ if __name__ == '__main__':
         '{$general_c}': id_res[('一般事故', '轻伤')],
         '{$general_d}': id_res[('一般事故', '死亡')],
         '{$dec_a}': dec_acc_count,
-        '{$dec_detail}': dec_base_details
-
+        '{$dec_detail}': dec_base_details,
+        '{$dec_time}': dec_time_details,
+        '{$dec_age}': dec_age_details,
+        '{$dec_cause}': dec_cause_details[:-1]+'。',
     }
 
-    wt.replace_template_variables('templates/monthly_report.docx', 'outputs/monthly_report_filled.docx', replacements)
+    table_list = {
+        0: dec_team_df
+    }
+
+    wt.replace_template_variables('templates/monthly_report.docx', 'outputs/monthly_report_filled.docx', replacements, table_list)
 
 
