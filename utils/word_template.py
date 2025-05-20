@@ -1,6 +1,15 @@
 from docx import Document
 from copy import deepcopy
 import pandas as pd
+import matplotlib.pyplot as plt
+from io import BytesIO
+import numpy as np
+from docx.shared import Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+# 配置matplotlib使用中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置默认字体为黑体
+plt.rcParams['axes.unicode_minus'] = False     # 解决负号显示问题
 
 def delete_paragraphs(doc, text, exact_match=False):
     """
@@ -31,14 +40,18 @@ def delete_paragraphs(doc, text, exact_match=False):
     doc.save(output_path)
     return len(paragraphs_to_delete)
 
-def replace_template_variables(template_path, output_path, replacements, table_data=None):
+def replace_template_variables(template_path, output_path, replacements, table_data=None, charts=None):
     """
     替换Word模板中的变量
     :param template_path: 模板文件路径
     :param output_path: 输出文件路径
     :param replacements: 要替换的变量字典
+    :param table_data: 表格数据，可以是DataFrame或字典格式{表格索引: DataFrame}
+    :param charts: 图表配置字典，格式为{占位符: {'data': DataFrame, 'x_column': str, 'y_column': str, 
+                  'title': str, 'xlabel': str, 'ylabel': str}}
     """
     doc = Document(template_path)
+    
     remaining_keys = set(replacements.keys())
     
     # 遍历文档中的所有段落
@@ -111,17 +124,112 @@ def replace_template_variables(template_path, output_path, replacements, table_d
                                 cell = added_row.cells[cell_index]
                                 for paragraph in cell.paragraphs:
                                     paragraph.text = str(cell_value)
-
+    
+    
+    insert_charts(doc, charts)
     # 保存修改后的文档
     doc.save(output_path)
+
+def insert_charts(doc, charts=None):
+    # 处理图表数据
+    if charts is not None:
+        for placeholder, config in charts.items():
+            # 验证配置
+            if not isinstance(config, dict) or 'data' not in config:
+                continue
+                
+            data = config['data']
+            if not isinstance(data, pd.DataFrame):
+                continue
+            
+            # 创建图形和坐标轴
+            fig, ax = plt.subplots(figsize=(10, 3))
+
+            x_col = config.get('x_column')
+            y_col = config.get('y_column')
+
+            if x_col in data.columns and y_col in data.columns:
+                # 创建柱状图
+                x = np.arange(len(data[x_col]))
+                bars = ax.bar(x, data[y_col], width=0.6)
+                # 设置x轴刻度和标签
+                ax.set_xticks(x)
+                ax.set_xticklabels(data[x_col], rotation=45)
+                
+                # 设置标题和标签
+                ax.set_title(config.get('title', ''), fontsize=16, pad=15)
+                ax.set_xlabel(config.get('xlabel', x_col), fontsize=12)
+                ax.set_ylabel(config.get('ylabel', y_col), fontsize=12)
+                
+                # 添加数值标签
+                for bar in bars:
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                            f'{int(height)}',
+                            ha='center', va='bottom')
+
+                # 调整布局
+                plt.tight_layout()
+                # 添加网格线
+                # plt.grid(True, linestyle='--', alpha=0.7)
+                ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+                # 将图表保存到内存中
+                img_stream = BytesIO()
+                plt.savefig(img_stream, format='png', dpi=300, bbox_inches='tight')
+                plt.close()
+                img_stream.seek(0)
+                
+                # 在文档中查找并替换图片占位符
+                for paragraph in doc.paragraphs:
+                    if placeholder in paragraph.text:
+                        # 获取当前段落的文本（可能包含其他内容）
+                        current_text = paragraph.text.replace(placeholder, "").strip()
+                        
+                        # 清除当前段落的内容
+                        paragraph.clear()
+
+                        # 如果有其他文本，重新添加
+                        if current_text:
+                            paragraph.add_run(current_text)
+
+                        # 在当前位置后添加新段落
+                        new_paragraph = doc.add_paragraph()
+                        doc._body._body.insert(doc._body._body.index(paragraph._p) + 1, new_paragraph._p)
+                        
+                        # 设置新段落对齐方式为居中
+                        new_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        # 添加图片到段落
+                        run = new_paragraph.add_run()
+                        run.add_picture(img_stream, width=Inches(6))
+                        break
 
     # 示例使用
 if __name__ == '__main__':
     template_path = 'templates/monthly_report.docx'
     output_path = 'outputs/monthly_report_filled.docx'
     
-    # 打开文档
-    doc = Document(output_path)
+    # 示例数据
+    replacements = {
+        '{$total_a}': '3',
+        '{$total_c}': '123',
+        '{$total_d}': '456'
+    }
+    
+    # 表格数据示例
+    table_data = pd.DataFrame({
+        '姓名': ['张三', '李四', '王五'],
+        '年龄': [30, 25, 35],
+        '职位': ['工程师', '设计师', '经理']
+    })
+    
+    # 替换变量并更新表格
+    replace_template_variables(
+        template_path=template_path,
+        output_path=output_path,
+        replacements=replacements,
+        table_data=table_data
+    )
     
     # 示例1：删除包含特定文本的段落
     delete_count = delete_paragraphs(doc, "亡人事故辖区街道")
@@ -149,6 +257,24 @@ if __name__ == '__main__':
         '年龄': [30, 25, 35],
         '职位': ['工程师', '设计师', '经理']
     })
+
+    # 准备数据和配置
+    df = pd.DataFrame({
+        '区域': ['东区', '西区', '南区', '北区'],
+        '事故数': [5, 7, 3, 6]
+    })
+
+    # 图表配置（数据和配置信息集成在一起）
+    charts = {
+        '{$accident_chart}': {
+            'data': df,  # 直接包含数据
+            'x_column': '区域',
+            'y_column': '事故数',
+            'title': '区域事故统计',
+            'xlabel': '区域名称',
+            'ylabel': '事故数量'
+        }
+    }
     
     # 处理变量替换和表格数据
     # replace_template_variables(template_path, output_path, replacements, df)

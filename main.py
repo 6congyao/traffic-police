@@ -3,6 +3,9 @@ from views import accident_statistics_overall_view as overall_view
 from views import accident_statistics_decedents_base_view as dec_base_view
 from views import accident_statistics_decedents_team_view as dec_team_view
 from views import accident_statistics_decedents_age_cause_view as dec_age_view
+from views import accident_statistics_casualties_base_view as cas_base_view
+from views import accident_statistics_casualties_team_view as cas_team_view
+from views import accident_statistics_casualties_time_view as cas_time_view
 from utils import word_template as wt
 from dateutil import parser
 
@@ -92,6 +95,11 @@ if __name__ == '__main__':
                     dec_cause_details += f"{row['违法行为'][:-1]},"
                 count += 1
         
+    cas_base_res_a, _ = cas_base_view.get_casualties_base_view(dataframe)
+    total_c_a = cas_base_res_a['一般事故'] + cas_base_res_a['简易事故']
+
+    cas_team_df = cas_team_view.get_casualties_team_view(dataframe)
+    cas_time_table_df, cas_time_chart_df, cas_time_top3_list = cas_time_view.get_casualties_time_view(dataframe)
 
     replacements = {
         '{$total_a}': acc_res['一般事故'] + acc_res['简易事故'],
@@ -107,12 +115,39 @@ if __name__ == '__main__':
         '{$dec_time}': dec_time_details,
         '{$dec_age}': dec_age_details,
         '{$dec_cause}': dec_cause_details[:-1]+'。',
+        '{$total_c_a}': total_c_a,
+        '{$total_c_c}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
+        '{$simple_c_a}': cas_base_res_a['简易事故'],
+        '{$simple_c_c}': id_res[('简易事故', '轻伤')],
+        '{$occupy_sa}': round((cas_base_res_a['简易事故'] / total_c_a) * 100, 1),
+        '{$occupy_sc}': round((id_res[('简易事故', '轻伤')] / (id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')])) * 100, 1),
+        '{$general_c_a}': cas_base_res_a['一般事故'],
+        '{$general_c_c}': id_res[('一般事故', '轻伤')],
+        '{$top1_cas_time}': cas_time_top3_list[0]['时段'],
+        '{$top2_cas_time}': cas_time_top3_list[1]['时段'],
+        '{$top3_cas_time}': cas_time_top3_list[2]['时段'],
+        '{$occupy_c_t1}': cas_time_top3_list[0]['占比'],
+        '{$occupy_c_t2}': cas_time_top3_list[1]['占比'],
+        '{$occupy_c_t3}': cas_time_top3_list[2]['占比']
     }
 
     table_list = {
-        0: dec_team_df
+        0: dec_team_df,
+        1: cas_team_df,
+        3: cas_time_table_df
     }
 
-    wt.replace_template_variables('templates/monthly_report.docx', 'outputs/monthly_report_filled.docx', replacements, table_list)
+    charts_list = {
+        '{$chart_cas_time}': {
+            'data': cas_time_chart_df,
+            'x_column': '时段',
+            'y_column': '受伤人数',
+            'title': '本月伤人事故时段分布',
+            'xlabel': '时间段',
+            'ylabel': '受伤人数'
+        }
+    }
+
+    wt.replace_template_variables('templates/monthly_report.docx', 'outputs/monthly_report_filled.docx', replacements, table_list, charts_list)
 
 

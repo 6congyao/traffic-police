@@ -45,9 +45,9 @@ def get_accidents_decedents_base_view(df):
     for accident_id in daset:
         related_dict[accident_id] = related_df[related_df['事故编号'] == accident_id]
     
-    print("=" * 100)
-    print("\n与死亡案例相关的所有记录：")
-    print(f"找到 {len(daset)} 个事故，共 {len(related_df)} 条记录")
+    # print("=" * 100)
+    # print("\n与死亡案例相关的所有记录：")
+    # print(f"找到 {len(daset)} 个事故，共 {len(related_df)} 条记录")
 
     # 为每个事故编号输出表格形式的数据
     # for accident_id, cases in related_dict.items():

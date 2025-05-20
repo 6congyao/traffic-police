@@ -28,9 +28,9 @@ def analyze_decedents_age_cause_view():
         for accident_id in dset:
             cases_dict[accident_id] = related_cases[related_cases['事故编号'] == accident_id]
         
-        print("\n与死亡案例相关的所有记录：")
-        print(f"找到 {len(dset)} 个事故，共 {len(related_cases)} 条记录")
-        print("=" * 100)
+        # print("\n与死亡案例相关的所有记录：")
+        # print(f"找到 {len(dset)} 个事故，共 {len(related_cases)} 条记录")
+        # print("=" * 100)
         
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', None)
