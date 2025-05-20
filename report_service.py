@@ -21,4 +21,4 @@ def upload_file():
         return send_file(word_file_path, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8081)
+    app.run(host='0.0.0.0', debug=True, port=8081)
