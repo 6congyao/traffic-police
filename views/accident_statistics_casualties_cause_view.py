@@ -2,7 +2,7 @@ import pandas as pd
 
 def analyze_casualties_cause_view():
     # 读取Excel文件
-    df = pd.read_excel('test.xlsx')
+    df = pd.read_excel('testcases/test.xlsx')
     
     total_count = df.shape[0]
     total_violation_series = df['违法行为'].value_counts()

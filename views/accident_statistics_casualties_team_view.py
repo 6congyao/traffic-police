@@ -8,7 +8,7 @@ def analyze_casualties_team_view():
     pd.set_option('display.float_format', lambda x: '%.0f' % x)
     try:
         # 读取Excel文件
-        df = pd.read_excel('test.xlsx')
+        df = pd.read_excel('testcases/test.xlsx')
         
         # 筛选轻伤数据
         light_injuries = df[df['伤害程度'] == '轻伤']

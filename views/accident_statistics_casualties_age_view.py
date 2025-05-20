@@ -5,7 +5,7 @@ from collections import defaultdict
 
 def analyze_casualties_age_view():
     # Read the Excel file
-    df = pd.read_excel('test.xlsx')
+    df = pd.read_excel('testcases/test.xlsx')
     
     # Filter for light injuries (轻伤)
     df = df[df['伤害程度'] == '轻伤']

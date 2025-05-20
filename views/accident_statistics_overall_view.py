@@ -85,4 +85,4 @@ def get_statistics_comments(df):
         print(traceback.format_exc(), flush=True)
 
 if __name__ == '__main__':
-    analyze_accidents_overall_view('test.xlsx')
+    analyze_accidents_overall_view('testcases/test.xlsx')

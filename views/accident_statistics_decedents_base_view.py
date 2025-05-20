@@ -8,7 +8,7 @@ def analyze_accidents_decedents_base_view():
     """
     try:
         # 读取Excel文件
-        df = pd.read_excel('test.xlsx')
+        df = pd.read_excel('testcases/test.xlsx')
         
         # 过滤出死亡数据，忽略NaN值
         death_df = df[df['伤害程度'] == '死亡'].dropna(subset=['伤害程度'])

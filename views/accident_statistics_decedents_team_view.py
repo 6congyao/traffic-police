@@ -47,7 +47,7 @@ def get_accidents_decedents_team_view(df):
 
 if __name__ == '__main__':
     # 示例使用
-    file_path = 'test.xlsx'
+    file_path = 'testcases/test.xlsx'
     results = analyze_accidents_decedents_team_view(file_path)
     # 将结果转换为DataFrame并按次数从高到低排序
     print("\n所属中队出现次数统计（按次数从高到低排序）：")

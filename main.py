@@ -30,16 +30,19 @@ def read_excel(file_path):
                 
     except FileNotFoundError:
         print(f"错误: 找不到文件 '{file_path}'", flush=True)
+        exit(1)
     except pd.errors.EmptyDataError:
         print(f"错误: Excel文件 '{file_path}' 是空的", flush=True)
+        exit(1)
     except Exception as e:
         print(f"处理数据时发生错误: {str(e)}", flush=True)
         import traceback
         print("详细错误信息:", flush=True)
         print(traceback.format_exc(), flush=True)
+        exit(1)
 
 if __name__ == '__main__':
-    dataframe = read_excel('test.xlsx')
+    dataframe = read_excel('testcases/test.xlsx')
 
     acc_res = overall_view.get_accidents_overall_view(dataframe)
     id_res = overall_view.get_accidents_casualties_overall_view(dataframe)

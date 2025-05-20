@@ -7,7 +7,7 @@ def analyze_casualties_time_view():
     分析轻伤事故的时间分布
     """
     # 读取Excel文件
-    df = pd.read_excel('test.xlsx')
+    df = pd.read_excel('testcases/test.xlsx')
     
     # 只保留轻伤的数据
     light_injuries = df[df['伤害程度'] == '轻伤']
