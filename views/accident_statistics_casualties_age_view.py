@@ -97,5 +97,83 @@ def analyze_casualties_age_view():
     print("-" * 50)
     print(f"总计:{total_count:>11}人{100:>10.1f}%")
 
+def get_casualties_age_view(df):
+    # Filter for light injuries (轻伤)
+    df = df[df['伤害程度'] == '轻伤']
+
+    # 获取去重后的数据
+    c_set = df.drop_duplicates(subset=['身份证明号码'])
+    
+    # Get current year
+    current_year = datetime.now().year
+    
+    # 初始化年龄分布字典，包含所有可能的区间
+    age_distribution = defaultdict(int)
+    # 初始化所有5年间隔的区间（0-64岁）
+    for i in range(0, 65, 5):
+        age_distribution[i] = 0
+    # 添加65岁及以上的区间
+    age_distribution[65] = 0
+    
+    # Process each valid ID number
+    for idx, row in c_set.iterrows():
+        id_number = row['身份证明号码']
+        
+        # Skip NaN values
+        if pd.isna(id_number):
+            continue
+            
+        # Convert to string and extract birth year using jionlp
+        try:
+            id_str = str(int(id_number))  # Convert to int first to remove any decimal points
+            id_info = jio.parse_id_card(id_str)
+            if id_info and 'birth_year' in id_info:
+                birth_year = id_info['birth_year']
+                age = current_year - int(birth_year)
+                # 对65岁以上的单独处理
+                if age >= 65:
+                    age_distribution[65] += 1
+                else:
+                    # 其他年龄按5年间隔分组
+                    age_group = (age // 5) * 5
+                    age_distribution[age_group] += 1
+        except (ValueError, TypeError):
+            continue
+    
+    # Convert age_distribution to DataFrame with interval display
+    age_intervals = [(f"{age}-{age+4}岁" if age < 65 else "65岁及以上", count) for age, count in age_distribution.items()]
+    res_age_df = pd.DataFrame(age_intervals, columns=['年龄段', '受伤人数'])
+    
+     # 获取top3年龄段
+     # Calculate total number of valid records
+    total_count = sum(age_distribution.values())
+
+    # Sort by count in descending order
+    sorted_groups = sorted(
+        [(age, count) for age, count in age_distribution.items() if count > 0],
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    res_top3 = []
+    for i, (age_group, count) in enumerate(sorted_groups[:3], 1):
+        percentage = (count / total_count) * 100
+        if age_group == 65:
+            res_top3.append({
+                '排名': i+1,
+                '年龄段': "65岁及以上",
+                '受伤人数': count,
+                '占比': f"{percentage:.1f}"
+            })
+        else:
+            res_top3.append({
+                '排名': i+1,
+                '年龄段': f'{age_group}-{age_group+4}岁',
+                '受伤人数': count,
+                '占比': f"{percentage:.1f}"
+            })
+
+    return res_age_df, res_top3
+
 if __name__ == '__main__':
     analyze_casualties_age_view()

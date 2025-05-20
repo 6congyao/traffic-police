@@ -1,2 +1,5 @@
 pandas
 openpyxl
+jionlp
+python-docx
+matplotlib

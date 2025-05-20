@@ -6,6 +6,9 @@ from views import accident_statistics_decedents_age_cause_view as dec_age_view
 from views import accident_statistics_casualties_base_view as cas_base_view
 from views import accident_statistics_casualties_team_view as cas_team_view
 from views import accident_statistics_casualties_time_view as cas_time_view
+from views import accident_statistics_casualties_age_view as cas_age_view
+from views import accident_statistics_casualties_cause_view as cas_cause_view
+
 from utils import word_template as wt
 from dateutil import parser
 
@@ -101,6 +104,10 @@ if __name__ == '__main__':
     cas_team_df = cas_team_view.get_casualties_team_view(dataframe)
     cas_time_table_df, cas_time_chart_df, cas_time_top3_list = cas_time_view.get_casualties_time_view(dataframe)
 
+    cas_age_chart_df, cas_age_top3_list = cas_age_view.get_casualties_age_view(dataframe)
+
+    cas_cause_top3, cas_cause_filtered_top3 = cas_cause_view.get_casualties_cause_view(dataframe)
+
     replacements = {
         '{$total_a}': acc_res['一般事故'] + acc_res['简易事故'],
         '{$total_c}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
@@ -128,7 +135,29 @@ if __name__ == '__main__':
         '{$top3_cas_time}': cas_time_top3_list[2]['时段'],
         '{$occupy_c_t1}': cas_time_top3_list[0]['占比'],
         '{$occupy_c_t2}': cas_time_top3_list[1]['占比'],
-        '{$occupy_c_t3}': cas_time_top3_list[2]['占比']
+        '{$occupy_c_t3}': cas_time_top3_list[2]['占比'],
+        '{$total_c_age}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
+        '{$top1_cas_age}': cas_age_top3_list[0]['年龄段'],
+        '{$top2_cas_age}': cas_age_top3_list[1]['年龄段'],
+        '{$top3_cas_age}': cas_age_top3_list[2]['年龄段'],
+        '{$top1_cas_count}': cas_age_top3_list[0]['受伤人数'],
+        '{$top2_cas_count}': cas_age_top3_list[1]['受伤人数'],
+        '{$top3_cas_count}': cas_age_top3_list[2]['受伤人数'],
+        '{$occupy_c_a1}': cas_age_top3_list[0]['占比'],
+        '{$occupy_c_a2}': cas_age_top3_list[1]['占比'],
+        '{$occupy_c_a3}': cas_age_top3_list[2]['占比'],
+        '{$top1_cause}': cas_cause_top3[0]['违法行为'][:-1],
+        '{$top2_cause}': cas_cause_top3[1]['违法行为'][:-1],
+        '{$top3_cause}': cas_cause_top3[2]['违法行为'][:-1],
+        '{$top1_cause_count}': cas_cause_top3[0]['数量'],
+        '{$top2_cause_count}': cas_cause_top3[1]['数量'],
+        '{$top3_cause_count}': cas_cause_top3[2]['数量'],
+        '{$top1_occupy_cause}': cas_cause_top3[0]['占比'],
+        '{$top2_occupy_cause}': cas_cause_top3[1]['占比'],
+        '{$top3_occupy_cause}': cas_cause_top3[2]['占比'],
+        '{$top1_cas_cause}': cas_cause_filtered_top3[0]['违法行为'][:-1],
+        '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'][:-1],
+        '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为'][:-1]
     }
 
     table_list = {
@@ -144,6 +173,14 @@ if __name__ == '__main__':
             'y_column': '受伤人数',
             'title': '本月伤人事故时段分布',
             'xlabel': '时间段',
+            'ylabel': '受伤人数'
+        },
+        '{$chart_cas_age}': {
+            'data': cas_age_chart_df,
+            'x_column': '年龄段',
+            'y_column': '受伤人数',
+            'title': '本月伤人事故年龄段分布',
+            'xlabel': '年龄段',
             'ylabel': '受伤人数'
         }
     }
