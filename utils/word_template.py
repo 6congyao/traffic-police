@@ -129,6 +129,7 @@ def replace_template_variables(template_path, output_path, replacements, table_d
     insert_charts(doc, charts)
     # 保存修改后的文档
     doc.save(output_path)
+    return output_path
 
 def insert_charts(doc, charts=None):
     # 处理图表数据
