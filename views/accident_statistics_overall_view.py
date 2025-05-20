@@ -1,6 +1,4 @@
 import pandas as pd
-import sys
-from datetime import datetime
 
 def analyze_accidents_overall_view(file_path):
     try:

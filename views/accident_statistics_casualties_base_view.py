@@ -16,6 +16,10 @@ def get_casualties_count_view(df):
     
     # 2. 对新数据集按来源分类统计
     source_stats = c_set['来源'].value_counts()
+    # 检查并添加缺失的来源
+    for source in ['一般事故', '简易事故']:
+        if source not in source_stats:
+            source_stats[source] = 0
     print("\n按来源分类的轻伤人数统计:")
     for source, count in source_stats.items():
         print(f"{source}: {count}人")
@@ -28,6 +32,10 @@ def get_accident_count_view(df):
     
     # 2. 对新数据集按来源分类统计
     source_stats = a_set['来源'].value_counts()
+    # 检查并添加缺失的来源
+    for source in ['一般事故', '简易事故']:
+        if source not in source_stats:
+            source_stats[source] = 0
     print("\n按来源分类的轻伤事故统计:")
     for source, count in source_stats.items():
         print(f"{source}: {count}起")
@@ -40,5 +48,5 @@ def get_casualties_base_view(df):
 
 
 if __name__ == "__main__":
-    file_path = "test.xlsx"
+    file_path = "testcases/3月样例.xlsx"
     analyze_casualties_base_view(file_path)
