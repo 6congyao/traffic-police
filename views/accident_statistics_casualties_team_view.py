@@ -78,11 +78,11 @@ def get_casualties_team_view(df):
     # 合并数据
     result = pd.DataFrame({
         '本月伤人情况': 0,
-        '总环比': 0,
-        '总同比': 0,
+        # '总环比': 0,
+        # '总同比': 0,
         '简易事故伤人情况': simple_injuries,
-        '简易环比': 0,
-        '简易同比': 0,
+        # '简易环比': 0,
+        # '简易同比': 0,
         '一般事故伤人情况': general_injuries
         
     }).fillna(0)

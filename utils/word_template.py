@@ -11,22 +11,19 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置默认字体为黑体
 plt.rcParams['axes.unicode_minus'] = False     # 解决负号显示问题
 
-def delete_paragraphs(doc, text, exact_match=False):
+def delete_paragraphs(doc, texts, exact_match=False):
     """
     删除文档中包含指定文本的段落
     :param doc: Document对象
-    :param text: 要查找的文本，可以是字符串或字符串列表
+    :param texts: 要查找的文本列表
     :param exact_match: 是否需要精确匹配。True时只删除完全匹配的段落，False时删除包含文本的段落
     :return: 被删除的段落数量
     """
-    if isinstance(text, str):
-        text = [text]
-    
     paragraphs_to_delete = []
     
     # 遍历所有段落，标记需要删除的段落
     for paragraph in doc.paragraphs:
-        for search_text in text:
+        for search_text in texts:
             if (exact_match and paragraph.text == search_text) or \
                (not exact_match and search_text in paragraph.text):
                 paragraphs_to_delete.append(paragraph._element)
@@ -207,8 +204,8 @@ def insert_charts(doc, charts=None):
 
     # 示例使用
 if __name__ == '__main__':
-    template_path = 'templates/monthly_report.docx'
-    output_path = 'outputs/monthly_report_filled.docx'
+    template_path = 'templates/full_report.docx'
+    output_path = 'outputs/report_generated.docx'
     
     # 示例数据
     replacements = {

@@ -21,12 +21,19 @@ def read_excel(file_path):
         print(f"文件读取成功，总行数: {len(df)}")
             
         # 检查必要的列是否存在
-        required_columns = ['事故编号', '来源', '身份证明号码', '伤害程度']
+        required_columns = ['事故编号', '来源', '身份证明号码', '伤害程度', '事故发生时间']
         for col in required_columns:
             if col not in df.columns:
                 raise ValueError(f"Excel文件中缺少必要的列: {col}")
         
-        return df
+         # 提取“事故发生时间”列，忽略空值
+        time_column = df['事故发生时间'].dropna()
+
+        # 计算起止区间
+        start_time = time_column.min()
+        end_time = time_column.max()
+
+        return df, f"{parser.parse(str(start_time)).strftime('%Y年%m月%d日')}", f"{parser.parse(str(end_time)).strftime('%Y年%m月%d日')}"
                 
     except FileNotFoundError:
         print(f"错误: 找不到文件 '{file_path}'", flush=True)
@@ -41,8 +48,10 @@ def read_excel(file_path):
         print(traceback.format_exc(), flush=True)
         exit(1)
 
+
 if __name__ == '__main__':
-    dataframe = read_excel('testcases/test.xlsx')
+    dataframe, str_start_ts, str_end_ts = read_excel('testcases/test.xlsx')
+    template_path = 'templates/full_report.docx'
 
     acc_res = overall_view.get_accidents_overall_view(dataframe)
     id_res = overall_view.get_accidents_casualties_overall_view(dataframe)
@@ -100,6 +109,8 @@ if __name__ == '__main__':
                     dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
                     dec_cause_details += f"{row['违法行为'][:-1]},"
                 count += 1
+    else:
+        template_path = 'templates/simple_report.docx'
         
     cas_base_res_a, _ = cas_base_view.get_casualties_base_view(dataframe)
     total_c_a = cas_base_res_a['一般事故'] + cas_base_res_a['简易事故']
@@ -112,6 +123,8 @@ if __name__ == '__main__':
     cas_cause_top3, cas_cause_filtered_top3 = cas_cause_view.get_casualties_cause_view(dataframe)
 
     replacements = {
+        '{$total_time_slot}': str_start_ts + ' - ' + str_end_ts,
+        '{$total_ts}': str_start_ts + ' - ' + str_end_ts,
         '{$total_a}': acc_res['一般事故'] + acc_res['简易事故'],
         '{$total_c}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
         '{$total_d}': id_res[('一般事故', '死亡')],
@@ -188,6 +201,4 @@ if __name__ == '__main__':
         }
     }
 
-    wt.replace_template_variables('templates/monthly_report.docx', 'outputs/monthly_report_filled.docx', replacements, table_list, charts_list)
-
-
+    wt.replace_template_variables(template_path, 'outputs/report_generated.docx', replacements, table_list, charts_list)
