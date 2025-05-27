@@ -92,7 +92,7 @@ def get_accidents_decedents_detail_view(dec_base_dict, dec_acc_count, dataframe)
                 else:
                     prename = f"当事人"   
                 dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
-                dec_cause_details += f"{row['违法行为'][:-1]},"
+                dec_cause_details += f"{row['违法行为']},"
     else:
         count = 1
         for accident_id, cases in dec_age_dict.items():
@@ -105,7 +105,7 @@ def get_accidents_decedents_detail_view(dec_base_dict, dec_acc_count, dataframe)
                 else:
                     prename = f"当事人"
                 dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
-                dec_cause_details += f"{row['违法行为'][:-1]},"
+                dec_cause_details += f"{row['违法行为']},"
             count += 1
     
     return dec_base_details[:-1], dec_time_details, dec_road_details, dec_age_details[:-1], dec_cause_details[:-1]

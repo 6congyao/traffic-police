@@ -4,6 +4,7 @@ from views import accident_statistics_decedents_base_view as dec_base_view
 from views import accident_statistics_decedents_detail_view as dec_detail_view
 from views import accident_statistics_casualties_base_view as cas_base_view
 from views import accident_statistics_casualties_team_view as cas_team_view
+from views import accident_statistics_casualties_road_view as cas_road_view
 from views import accident_statistics_casualties_time_view as cas_time_view
 from views import accident_statistics_casualties_age_view as cas_age_view
 from views import accident_statistics_casualties_cause_view as cas_cause_view
@@ -68,6 +69,9 @@ if __name__ == '__main__':
     total_c_a = cas_base_res_a['一般事故'] + cas_base_res_a['简易事故']
 
     cas_team_df = cas_team_view.get_casualties_team_view(dataframe)
+
+    cas_road_table_df = cas_road_view.get_casualties_road_view(dataframe)
+
     cas_time_table_df, cas_time_chart_df, cas_time_top3_list = cas_time_view.get_casualties_time_view(dataframe)
 
     cas_age_chart_df, cas_age_top3_list = cas_age_view.get_casualties_age_view(dataframe)
@@ -115,23 +119,24 @@ if __name__ == '__main__':
         '{$occupy_c_a1}': cas_age_top3_list[0]['占比'],
         '{$occupy_c_a2}': cas_age_top3_list[1]['占比'],
         '{$occupy_c_a3}': cas_age_top3_list[2]['占比'],
-        '{$top1_cause}': cas_cause_top3[0]['违法行为'][:-1],
-        '{$top2_cause}': cas_cause_top3[1]['违法行为'][:-1],
-        '{$top3_cause}': cas_cause_top3[2]['违法行为'][:-1],
+        '{$top1_cause}': cas_cause_top3[0]['违法行为'],
+        '{$top2_cause}': cas_cause_top3[1]['违法行为'],
+        '{$top3_cause}': cas_cause_top3[2]['违法行为'],
         '{$top1_cause_count}': cas_cause_top3[0]['数量'],
         '{$top2_cause_count}': cas_cause_top3[1]['数量'],
         '{$top3_cause_count}': cas_cause_top3[2]['数量'],
         '{$top1_occupy_cause}': cas_cause_top3[0]['占比'],
         '{$top2_occupy_cause}': cas_cause_top3[1]['占比'],
         '{$top3_occupy_cause}': cas_cause_top3[2]['占比'],
-        '{$top1_cas_cause}': cas_cause_filtered_top3[0]['违法行为'][:-1],
-        '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'][:-1],
-        '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为'][:-1]
+        '{$top1_cas_cause}': cas_cause_filtered_top3[0]['违法行为'],
+        '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'],
+        '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为']
     }
 
     table_list = {
         # 0: dec_team_df,
         0: cas_team_df,
+        1: cas_road_table_df,
         2: cas_time_table_df
     }
 

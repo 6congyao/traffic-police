@@ -1,10 +1,10 @@
 import pandas as pd
 from views import accident_statistics_overall_view as overall_view
 from views import accident_statistics_decedents_base_view as dec_base_view
-from views import accident_statistics_decedents_team_view as dec_team_view
-from views import accident_statistics_decedents_age_cause_view as dec_age_view
+from views import accident_statistics_decedents_detail_view as dec_detail_view
 from views import accident_statistics_casualties_base_view as cas_base_view
 from views import accident_statistics_casualties_team_view as cas_team_view
+from views import accident_statistics_casualties_road_view as cas_road_view
 from views import accident_statistics_casualties_time_view as cas_time_view
 from views import accident_statistics_casualties_age_view as cas_age_view
 from views import accident_statistics_casualties_cause_view as cas_cause_view
@@ -59,57 +59,9 @@ def generate_report(input_file):
 
     dec_base_res, dec_acc_count = dec_base_view.get_accidents_decedents_base_view(dataframe)
 
-    dec_base_details = ""
-    dec_time_details = ""
-    dec_age_details = ""
-    dec_cause_details = ""
     if dec_acc_count > 0:
-        # 亡人事故基本情况
-        for accident_id, cases in dec_base_res.items():
-            dset = cases[cases['伤害程度']== '死亡'].reset_index(drop=True)
-            if len(dset) == 1:
-                for idx, row in dset.iterrows():
-                    time_obj = parser.parse(str(row['事故发生时间']))
-                    dec_base_details += f"{time_obj.strftime('%m月%d日%H时%M分')}, 在{row['事故地点']}，因{row['违法行为']}违法行为，造成1人死亡。"
-                    dec_time_details += f"{time_obj.strftime('%H时%M分')}、"
-            else:
-                behaviors = ""
-                for idx, row in dset.iterrows():
-                    behaviors += f"{row['违法行为']}、"
-                time_obj = parser.parse(str(row['事故发生时间']))
-                dec_base_details += f"{time_obj.strftime('%m月%d日%H时%M分')}, 在{row['事故地点']}，因{behaviors[:-1]}违法行为，造成{len(dset)}人死亡。"
-                dec_time_details += f"{time_obj.strftime('%H时%M分')}、"
-    
-        dec_time_details = dec_time_details[:-1]
-        dec_team_df = dec_team_view.get_accidents_decedents_team_view(dataframe)
-
-        dec_age_dict, _= dec_age_view.get_decedents_age_cause_view(dataframe)
-        if dec_acc_count == 1:
-            for accident_id, cases in dec_age_dict.items():
-                dec_age_details = f"事故双方为"
-                dec_cause_details = f"事故原因为"
-                prename = ""
-                for idx, row in cases.iterrows():
-                    if row['伤害程度'] == '死亡':
-                        prename = f"死者"
-                    else:
-                        prename = f"当事人"   
-                    dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
-                    dec_cause_details += f"{row['违法行为'][:-1]},"
-        else:
-            count = 1
-            for accident_id, cases in dec_age_dict.items():
-                dec_age_details += f"事故{count}双方为"
-                dec_cause_details += f"事故{count}原因为"
-                prename = ""
-                for idx, row in cases.iterrows():
-                    if row['伤害程度'] == '死亡':
-                        prename = f"死者"
-                    else:
-                        prename = f"当事人"
-                    dec_age_details += f"{prename}{row['姓名']}，{row['性别']}，{row['年龄']}岁。"
-                    dec_cause_details += f"{row['违法行为'][:-1]},"
-                count += 1
+        dec_base_details, dec_time_details, dec_road_details, dec_age_details, dec_cause_details = dec_detail_view.get_accidents_decedents_detail_view(dec_base_res, dec_acc_count, dataframe)
+        
     else:
         template_path = 'templates/simple_report.docx'
         
@@ -117,6 +69,7 @@ def generate_report(input_file):
     total_c_a = cas_base_res_a['一般事故'] + cas_base_res_a['简易事故']
 
     cas_team_df = cas_team_view.get_casualties_team_view(dataframe)
+    cas_road_table_df = cas_road_view.get_casualties_road_view(dataframe)
     cas_time_table_df, cas_time_chart_df, cas_time_top3_list = cas_time_view.get_casualties_time_view(dataframe)
     cas_age_chart_df, cas_age_top3_list = cas_age_view.get_casualties_age_view(dataframe)
     cas_cause_top3, cas_cause_filtered_top3 = cas_cause_view.get_casualties_cause_view(dataframe)
@@ -134,9 +87,10 @@ def generate_report(input_file):
         '{$general_d}': id_res[('一般事故', '死亡')],
         '{$dec_a}': dec_acc_count,
         '{$dec_detail}': dec_base_details,
+        '{$dec_road}': dec_road_details,
         '{$dec_time}': dec_time_details,
         '{$dec_age}': dec_age_details,
-        '{$dec_cause}': dec_cause_details[:-1]+'。',
+        '{$dec_cause}': dec_cause_details,
         '{$total_c_a}': total_c_a,
         '{$total_c_c}': id_res[('一般事故', '轻伤')] + id_res[('简易事故', '轻伤')],
         '{$simple_c_a}': cas_base_res_a['简易事故'],
@@ -161,24 +115,25 @@ def generate_report(input_file):
         '{$occupy_c_a1}': cas_age_top3_list[0]['占比'],
         '{$occupy_c_a2}': cas_age_top3_list[1]['占比'],
         '{$occupy_c_a3}': cas_age_top3_list[2]['占比'],
-        '{$top1_cause}': cas_cause_top3[0]['违法行为'][:-1],
-        '{$top2_cause}': cas_cause_top3[1]['违法行为'][:-1],
-        '{$top3_cause}': cas_cause_top3[2]['违法行为'][:-1],
+        '{$top1_cause}': cas_cause_top3[0]['违法行为'],
+        '{$top2_cause}': cas_cause_top3[1]['违法行为'],
+        '{$top3_cause}': cas_cause_top3[2]['违法行为'],
         '{$top1_cause_count}': cas_cause_top3[0]['数量'],
         '{$top2_cause_count}': cas_cause_top3[1]['数量'],
         '{$top3_cause_count}': cas_cause_top3[2]['数量'],
         '{$top1_occupy_cause}': cas_cause_top3[0]['占比'],
         '{$top2_occupy_cause}': cas_cause_top3[1]['占比'],
         '{$top3_occupy_cause}': cas_cause_top3[2]['占比'],
-        '{$top1_cas_cause}': cas_cause_filtered_top3[0]['违法行为'][:-1],
-        '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'][:-1],
-        '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为'][:-1]
+        '{$top1_cas_cause}': cas_cause_filtered_top3[0]['违法行为'],
+        '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'],
+        '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为']
     }
 
     table_list = {
-        0: dec_team_df,
-        1: cas_team_df,
-        3: cas_time_table_df
+        # 0: dec_team_df,
+        0: cas_team_df,
+        1: cas_road_table_df,
+        2: cas_time_table_df
     }
 
     charts_list = {
