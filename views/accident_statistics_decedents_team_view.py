@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 def analyze_accidents_decedents_team_view(file_path):
     """
@@ -20,7 +21,9 @@ def analyze_accidents_decedents_team_view(file_path):
         unique_decedents = decedents_df.drop_duplicates(subset=['事故编号'], keep='first')
         
         # 统计所属中队的出现次数，在统计时将数值转换为字符串
-        team_counts = unique_decedents['所属中队'].apply(lambda x: str(int(x))).value_counts().to_dict()
+        team_counts = unique_decedents['所属中队'].apply(
+            lambda x: re.search(r'大队(.+)', x).group(1) if pd.notnull(x) and re.search(r'大队(.+)', x) else None
+        ).value_counts().to_dict()
             
         return team_counts
     except Exception as e:
@@ -35,8 +38,10 @@ def get_accidents_decedents_team_view(df):
     unique_decedents = decedents_df.drop_duplicates(subset=['事故编号'], keep='first')
     
     # 统计所属中队的出现次数，在统计时将数值转换为字符串
-    team_counts = unique_decedents['所属中队'].apply(lambda x: str(int(x))).value_counts().to_dict()
-
+    team_counts = unique_decedents['所属中队'].apply(
+        lambda x: re.search(r'大队(.+)', x).group(1) if pd.notnull(x) and re.search(r'大队(.+)', x) else None
+    ).value_counts().to_dict()
+    
     df_results = pd.DataFrame(list(team_counts.items()), columns=['所属中队', '亡人事故次数'])
     df_results = df_results.sort_values(by='亡人事故次数', ascending=False)
     # 重置索引并隐藏索引列

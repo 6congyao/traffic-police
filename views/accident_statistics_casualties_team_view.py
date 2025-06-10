@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 def analyze_casualties_team_view():
     """
@@ -45,7 +46,9 @@ def analyze_casualties_team_view():
         result = result.reset_index()
         
         # 格式化所属中队编号
-        result['所属中队'] = result['所属中队'].apply(lambda x: str(x).split('.')[0])
+        result['所属中队'] = result['所属中队'].apply(
+            lambda x: re.search(r'大队(.+)', x).group(1) if pd.notnull(x) and re.search(r'大队(.+)', x) else None
+        )
         
         # 确保所有数值列为整数
         for col in ['本月伤人情况','一般事故伤人情况','简易事故伤人情况']:
@@ -95,7 +98,9 @@ def get_casualties_team_view(df):
     result = result.reset_index()
     
     # 格式化所属中队编号
-    result['所属中队'] = result['所属中队'].apply(lambda x: str(x).split('.')[0])
+    result['所属中队'] = result['所属中队'].apply(
+        lambda x: re.search(r'大队(.+)', x).group(1) if pd.notnull(x) and re.search(r'大队(.+)', x) else None
+    )
     # 确保所有数值列为整数
     for col in ['本月伤人情况','一般事故伤人情况','简易事故伤人情况']:
         result[col] = result[col].astype(int)
