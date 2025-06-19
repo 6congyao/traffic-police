@@ -158,10 +158,10 @@ def generate_report(input_file):
 
     return wt.replace_template_variables(template_path, 'outputs/pre_generated_report.docx', replacements, table_list, charts_list)
 
-def reinforce_report(input_file, content_a, content_s):
+def reinforce_report(input_file, contents_a, contents_s):
     replacements = {
-        '{$ai_analysis}': content_a,
-        '{$ai_suggestion}': content_s
+        '{$ai_analysis}': contents_a,
+        '{$ai_suggestion}': contents_s
     }
 
     return wt.replace_template_variables(input_file, 'outputs/generated_report.docx', replacements, None, None)
