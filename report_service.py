@@ -9,7 +9,7 @@ CORS(app)  # Enable CORS for all routes
 def upload():
     if 'file' not in request.files:
         return 'No file part', 400
-    file = request.files['upload_files']
+    file = request.files['file']
     if file.filename == '':
         return 'No selected file', 400
     if file:
