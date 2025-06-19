@@ -28,9 +28,10 @@ def reinforce():
     if file.filename == '':
         return 'No selected file', 400
     if file:
-        contents = request.form.get('contents')
+        contents_a = request.form.get('contents_a')
+        contents_s = request.form.get('contents_s')
         # Save the Word document
-        word_file_path = rh.reinforce_report(file, contents)
+        word_file_path = rh.reinforce_report(file, contents_a, contents_s)
         
         # Send the Word document as a response
         return send_file(word_file_path, as_attachment=True)
