@@ -58,10 +58,21 @@ if __name__ == '__main__':
 
     dec_base_res, dec_acc_count = dec_base_view.get_accidents_decedents_base_view(dataframe)
 
+    replacements_dec = None
     
     if dec_acc_count > 0:
         dec_base_details, dec_time_details, dec_road_details, dec_team_details, dec_age_details, dec_cause_details = dec_detail_view.get_accidents_decedents_detail_view(dec_base_res, dec_acc_count, dataframe)
-        
+        replacements_dec = {
+            '{$dec_a}': dec_acc_count,
+            '{$dec_detail}': dec_base_details,
+            '{$dec_team}': dec_team_details,
+            '{$dec_road}': dec_road_details,
+            '{$dec_time}': dec_time_details,
+            '{$dec_age}': dec_age_details,
+            '{$dec_cause}': dec_cause_details
+        }
+
+
     else:
         template_path = 'templates/simple_report.docx'
         
@@ -89,13 +100,6 @@ if __name__ == '__main__':
         '{$general_a}': acc_res['一般事故'],
         '{$general_c}': id_res.get(('一般事故', '轻伤'), 0),
         '{$general_d}': id_res.get(('一般事故', '死亡'), 0),
-        '{$dec_a}': dec_acc_count,
-        '{$dec_detail}': dec_base_details,
-        '{$dec_team}': dec_team_details,
-        '{$dec_road}': dec_road_details,
-        '{$dec_time}': dec_time_details,
-        '{$dec_age}': dec_age_details,
-        '{$dec_cause}': dec_cause_details,
         '{$total_c_a}': total_c_a,
         '{$total_c_c}': id_res.get(('一般事故', '轻伤'), 0) + id_res.get(('简易事故', '轻伤'), 0),
         '{$simple_c_a}': cas_base_res_a['简易事故'],
@@ -133,6 +137,9 @@ if __name__ == '__main__':
         '{$top2_cas_cause}': cas_cause_filtered_top3[1]['违法行为'],
         '{$top3_cas_cause}': cas_cause_filtered_top3[2]['违法行为']
     }
+
+    if replacements_dec is not None:
+        replacements.update(replacements_dec)
 
     table_list = {
         # 0: dec_team_df,
