@@ -51,7 +51,7 @@ def read_excel(file_path):
 
 if __name__ == '__main__':
     dataframe, str_start_ts, str_end_ts = read_excel('testcases/test.xlsx')
-    template_path = 'templates/pre_full_report.docx'
+    template_path = 'templates/full_report.docx'
 
     acc_res = overall_view.get_accidents_overall_view(dataframe)
     id_res = overall_view.get_accidents_casualties_overall_view(dataframe)
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         dec_base_details, dec_time_details, dec_road_details, dec_team_details, dec_age_details, dec_cause_details = dec_detail_view.get_accidents_decedents_detail_view(dec_base_res, dec_acc_count, dataframe)
         
     else:
-        template_path = 'templates/pre_simple_report.docx'
+        template_path = 'templates/simple_report.docx'
         
     cas_base_res_a, _ = cas_base_view.get_casualties_base_view(dataframe)
     total_c_a = cas_base_res_a['一般事故'] + cas_base_res_a['简易事故']
